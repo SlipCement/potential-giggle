@@ -54,6 +54,20 @@
     let bars = [];
     let sorting = false;
 
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function playTone(value) {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.frequency.value = 100 + value * 5;
+      osc.type = 'sine';
+      gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.05);
+    }
+
     function generateBars() {
       const count = parseInt(barCountSlider.value);
       barContainer.innerHTML = "";
@@ -97,6 +111,8 @@
 
       bars[i].element.style.height = `${bars[i].value * 3}px`;
       bars[j].element.style.height = `${bars[j].value * 3}px`;
+
+      playTone(bars[i].value);
     }
 
     async function bubbleSort() {
@@ -105,7 +121,7 @@
           if (!sorting) return;
           if (bars[j].value > bars[j + 1].value) {
             await swap(j, j + 1);
-            await delay(10);
+            await delay(2);
           }
         }
       }
@@ -120,7 +136,7 @@
         }
         if (min !== i) {
           await swap(i, min);
-          await delay(10);
+          await delay(2);
         }
       }
     }
@@ -133,11 +149,13 @@
           if (!sorting) return;
           bars[j + 1].value = bars[j].value;
           bars[j + 1].element.style.height = `${bars[j].value * 3}px`;
+          playTone(bars[j].value);
           j--;
-          await delay(10);
+          await delay(2);
         }
         bars[j + 1].value = key;
         bars[j + 1].element.style.height = `${key * 3}px`;
+        playTone(key);
       }
     }
 
