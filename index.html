@@ -1,1 +1,152 @@
-<p>Hi im new to coding :)</p>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sorting Algorithm Visualizer</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #121212;
+      color: white;
+      text-align: center;
+    }
+    #controls {
+      margin-bottom: 20px;
+    }
+    #bars {
+      display: flex;
+      align-items: flex-end;
+      height: 400px;
+      border: 1px solid #333;
+      background: #1e1e1e;
+      overflow: hidden;
+    }
+    .bar {
+      background: #4caf50;
+      margin: 0 1px;
+      flex: 1;
+    }
+    button, input[type="range"] {
+      margin: 5px;
+      padding: 10px;
+      font-size: 1em;
+    }
+  </style>
+</head>
+<body>
+  <h1>Sorting Algorithm Visualizer</h1>
+  <div id="controls">
+    <label>Bars: <input type="range" min="10" max="100" value="50" id="barCount" /></label>
+    <button onclick="startSort('bubble')">Bubble Sort</button>
+    <button onclick="startSort('selection')">Selection Sort</button>
+    <button onclick="startSort('insertion')">Insertion Sort</button>
+    <button onclick="stopSort()">Stop</button>
+    <button onclick="generateBars()">Restart</button>
+  </div>
+  <div id="bars"></div>
+
+  <script>
+    const barContainer = document.getElementById("bars");
+    const barCountSlider = document.getElementById("barCount");
+    let bars = [];
+    let sorting = false;
+
+    function generateBars() {
+      const count = parseInt(barCountSlider.value);
+      barContainer.innerHTML = "";
+      bars = [];
+      for (let i = 0; i < count; i++) {
+        const height = Math.floor(Math.random() * 100) + 1;
+        const bar = document.createElement("div");
+        bar.classList.add("bar");
+        bar.style.height = `${height * 3}px`;
+        bar.style.width = `${100 / count}%`;
+        bars.push({ element: bar, value: height });
+        barContainer.appendChild(bar);
+      }
+    }
+
+    async function startSort(type) {
+      if (sorting) return;
+      sorting = true;
+      switch (type) {
+        case "bubble":
+          await bubbleSort();
+          break;
+        case "selection":
+          await selectionSort();
+          break;
+        case "insertion":
+          await insertionSort();
+          break;
+      }
+      sorting = false;
+    }
+
+    function stopSort() {
+      sorting = false;
+    }
+
+    async function swap(i, j) {
+      let temp = bars[i].value;
+      bars[i].value = bars[j].value;
+      bars[j].value = temp;
+
+      bars[i].element.style.height = `${bars[i].value * 3}px`;
+      bars[j].element.style.height = `${bars[j].value * 3}px`;
+    }
+
+    async function bubbleSort() {
+      for (let i = 0; i < bars.length - 1; i++) {
+        for (let j = 0; j < bars.length - i - 1; j++) {
+          if (!sorting) return;
+          if (bars[j].value > bars[j + 1].value) {
+            await swap(j, j + 1);
+            await delay(10);
+          }
+        }
+      }
+    }
+
+    async function selectionSort() {
+      for (let i = 0; i < bars.length; i++) {
+        let min = i;
+        for (let j = i + 1; j < bars.length; j++) {
+          if (!sorting) return;
+          if (bars[j].value < bars[min].value) min = j;
+        }
+        if (min !== i) {
+          await swap(i, min);
+          await delay(10);
+        }
+      }
+    }
+
+    async function insertionSort() {
+      for (let i = 1; i < bars.length; i++) {
+        let key = bars[i].value;
+        let j = i - 1;
+        while (j >= 0 && bars[j].value > key) {
+          if (!sorting) return;
+          bars[j + 1].value = bars[j].value;
+          bars[j + 1].element.style.height = `${bars[j].value * 3}px`;
+          j--;
+          await delay(10);
+        }
+        bars[j + 1].value = key;
+        bars[j + 1].element.style.height = `${key * 3}px`;
+      }
+    }
+
+    function delay(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    barCountSlider.addEventListener("input", generateBars);
+    generateBars();
+  </script>
+</body>
+</html>
