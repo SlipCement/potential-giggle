@@ -43,20 +43,26 @@
     <button onclick="startSort('bubble')">Bubble Sort</button>
     <button onclick="startSort('selection')">Selection Sort</button>
     <button onclick="startSort('insertion')">Insertion Sort</button>
+    <button onclick="startSort('merge')">Merge Sort</button>
+    <button onclick="startSort('quick')">Quick Sort</button>
     <button onclick="stopSort()">Stop</button>
     <button onclick="generateBars()">Restart</button>
+    <button onclick="toggleSound()" id="soundToggle">Mute</button>
   </div>
   <div id="bars"></div>
 
   <script>
     const barContainer = document.getElementById("bars");
     const barCountSlider = document.getElementById("barCount");
+    const soundToggleBtn = document.getElementById("soundToggle");
     let bars = [];
     let sorting = false;
+    let soundEnabled = true;
 
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
     function playTone(value) {
+      if (!soundEnabled) return;
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
       osc.frequency.value = 100 + value * 5;
@@ -66,6 +72,11 @@
       gain.connect(audioCtx.destination);
       osc.start();
       osc.stop(audioCtx.currentTime + 0.05);
+    }
+
+    function toggleSound() {
+      soundEnabled = !soundEnabled;
+      soundToggleBtn.textContent = soundEnabled ? "Mute" : "Unmute";
     }
 
     function generateBars() {
@@ -88,14 +99,15 @@
       sorting = true;
       switch (type) {
         case "bubble":
-          await bubbleSort();
-          break;
+          await bubbleSort(); break;
         case "selection":
-          await selectionSort();
-          break;
+          await selectionSort(); break;
         case "insertion":
-          await insertionSort();
-          break;
+          await insertionSort(); break;
+        case "merge":
+          await mergeSort(0, bars.length - 1); break;
+        case "quick":
+          await quickSort(0, bars.length - 1); break;
       }
       sorting = false;
     }
@@ -157,6 +169,74 @@
         bars[j + 1].element.style.height = `${key * 3}px`;
         playTone(key);
       }
+    }
+
+    async function mergeSort(start, end) {
+      if (start >= end || !sorting) return;
+      const mid = Math.floor((start + end) / 2);
+      await mergeSort(start, mid);
+      await mergeSort(mid + 1, end);
+      await merge(start, mid, end);
+    }
+
+    async function merge(start, mid, end) {
+      const left = bars.slice(start, mid + 1);
+      const right = bars.slice(mid + 1, end + 1);
+      let i = 0, j = 0, k = start;
+      while (i < left.length && j < right.length) {
+        if (!sorting) return;
+        if (left[i].value <= right[j].value) {
+          bars[k].value = left[i].value;
+          bars[k].element.style.height = `${left[i].value * 3}px`;
+          playTone(left[i].value);
+          i++;
+        } else {
+          bars[k].value = right[j].value;
+          bars[k].element.style.height = `${right[j].value * 3}px`;
+          playTone(right[j].value);
+          j++;
+        }
+        k++;
+        await delay(2);
+      }
+      while (i < left.length) {
+        if (!sorting) return;
+        bars[k].value = left[i].value;
+        bars[k].element.style.height = `${left[i].value * 3}px`;
+        playTone(left[i].value);
+        i++; k++;
+        await delay(2);
+      }
+      while (j < right.length) {
+        if (!sorting) return;
+        bars[k].value = right[j].value;
+        bars[k].element.style.height = `${right[j].value * 3}px`;
+        playTone(right[j].value);
+        j++; k++;
+        await delay(2);
+      }
+    }
+
+    async function quickSort(start, end) {
+      if (start >= end || !sorting) return;
+      const pivotIndex = await partition(start, end);
+      await quickSort(start, pivotIndex - 1);
+      await quickSort(pivotIndex + 1, end);
+    }
+
+    async function partition(start, end) {
+      let pivotValue = bars[end].value;
+      let pivotIndex = start;
+      for (let i = start; i < end; i++) {
+        if (!sorting) return pivotIndex;
+        if (bars[i].value < pivotValue) {
+          await swap(i, pivotIndex);
+          pivotIndex++;
+          await delay(2);
+        }
+      }
+      await swap(pivotIndex, end);
+      return pivotIndex;
     }
 
     function delay(ms) {
