@@ -34,12 +34,16 @@
       padding: 10px;
       font-size: 1em;
     }
+    label {
+      margin: 0 10px;
+    }
   </style>
 </head>
 <body>
   <h1>Sorting Algorithm Visualizer</h1>
   <div id="controls">
     <label>Bars: <input type="range" min="10" max="500" value="100" id="barCount" /></label>
+    <label>Speed: <input type="range" min="1" max="100" value="50" id="speedControl" /></label>
     <button onclick="startSort('bubble')">Bubble Sort</button>
     <button onclick="startSort('selection')">Selection Sort</button>
     <button onclick="startSort('insertion')">Insertion Sort</button>
@@ -54,6 +58,7 @@
   <script>
     const barContainer = document.getElementById("bars");
     const barCountSlider = document.getElementById("barCount");
+    const speedSlider = document.getElementById("speedControl");
     const soundToggleBtn = document.getElementById("soundToggle");
     let bars = [];
     let sorting = false;
@@ -116,6 +121,10 @@
       sorting = false;
     }
 
+    function getDelay() {
+      return 101 - parseInt(speedSlider.value);
+    }
+
     async function swap(i, j) {
       let temp = bars[i].value;
       bars[i].value = bars[j].value;
@@ -133,7 +142,7 @@
           if (!sorting) return;
           if (bars[j].value > bars[j + 1].value) {
             await swap(j, j + 1);
-            await delay(2);
+            await delay(getDelay());
           }
         }
       }
@@ -148,7 +157,7 @@
         }
         if (min !== i) {
           await swap(i, min);
-          await delay(2);
+          await delay(getDelay());
         }
       }
     }
@@ -163,7 +172,7 @@
           bars[j + 1].element.style.height = `${bars[j].value * 3}px`;
           playTone(bars[j].value);
           j--;
-          await delay(2);
+          await delay(getDelay());
         }
         bars[j + 1].value = key;
         bars[j + 1].element.style.height = `${key * 3}px`;
@@ -176,44 +185,27 @@
       const mid = Math.floor((start + end) / 2);
       await mergeSort(start, mid);
       await mergeSort(mid + 1, end);
-      await merge(start, mid, end);
-    }
 
-    async function merge(start, mid, end) {
-      const left = bars.slice(start, mid + 1);
-      const right = bars.slice(mid + 1, end + 1);
-      let i = 0, j = 0, k = start;
-      while (i < left.length && j < right.length) {
+      let temp = [];
+      let i = start, j = mid + 1;
+
+      while (i <= mid && j <= end) {
         if (!sorting) return;
-        if (left[i].value <= right[j].value) {
-          bars[k].value = left[i].value;
-          bars[k].element.style.height = `${left[i].value * 3}px`;
-          playTone(left[i].value);
-          i++;
+        if (bars[i].value < bars[j].value) {
+          temp.push(bars[i++].value);
         } else {
-          bars[k].value = right[j].value;
-          bars[k].element.style.height = `${right[j].value * 3}px`;
-          playTone(right[j].value);
-          j++;
+          temp.push(bars[j++].value);
         }
-        k++;
-        await delay(2);
       }
-      while (i < left.length) {
-        if (!sorting) return;
-        bars[k].value = left[i].value;
-        bars[k].element.style.height = `${left[i].value * 3}px`;
-        playTone(left[i].value);
-        i++; k++;
-        await delay(2);
-      }
-      while (j < right.length) {
-        if (!sorting) return;
-        bars[k].value = right[j].value;
-        bars[k].element.style.height = `${right[j].value * 3}px`;
-        playTone(right[j].value);
-        j++; k++;
-        await delay(2);
+
+      while (i <= mid) temp.push(bars[i++].value);
+      while (j <= end) temp.push(bars[j++].value);
+
+      for (let k = start; k <= end; k++) {
+        bars[k].value = temp[k - start];
+        bars[k].element.style.height = `${bars[k].value * 3}px`;
+        playTone(bars[k].value);
+        await delay(getDelay());
       }
     }
 
@@ -232,7 +224,7 @@
         if (bars[i].value < pivotValue) {
           await swap(i, pivotIndex);
           pivotIndex++;
-          await delay(2);
+          await delay(getDelay());
         }
       }
       await swap(pivotIndex, end);
